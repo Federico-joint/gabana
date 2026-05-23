@@ -22,11 +22,25 @@ function toPosix(filePath) {
 }
 
 function sanitizeSegment(segment) {
-  return segment.replace(invalidNameChars, (char) => {
-    if (char === "?") return "__q__";
-    if (char === "#") return "__hash__";
-    return "_";
-  });
+  var match = segment.match(/^([^?#]+)([?#])(.*)$/);
+  if (!match) return segment;
+
+  var baseName = match[1];
+  var suffix = match[3] || "";
+  var ext = path.posix.extname(baseName);
+
+  if (!suffix) return baseName;
+
+  var cleanSuffix = suffix
+    .replace(new RegExp(ext.replace(".", "\\.") + "$"), "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  if (!cleanSuffix) return baseName;
+
+  if (!ext) return `${baseName}__${cleanSuffix}`;
+
+  return `${baseName.slice(0, -ext.length)}__${cleanSuffix}${ext}`;
 }
 
 function sanitizeRelative(relPath) {
