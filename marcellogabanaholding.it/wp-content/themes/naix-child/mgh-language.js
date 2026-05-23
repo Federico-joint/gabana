@@ -3,6 +3,7 @@
   var loader = document.getElementById('naix-before-unloader');
   var languageOverlay = document.getElementById('mgh-language-overlay');
   var switcher = document.querySelector('.language-switch');
+  var bootLoaderTimeouts = [];
 
   var htmlRules = [
     ['#slider-6-slide-6-layer-1', 'Caring for progress'],
@@ -192,6 +193,7 @@
       return;
     }
     if (loader) {
+      loader.style.display = 'block';
       loader.classList.remove('out');
       loader.classList.add('mgh-language-loading');
     }
@@ -204,6 +206,10 @@
     } else if (loader) {
       loader.classList.add('out');
       loader.classList.remove('mgh-language-loading');
+    }
+    if (loader && !loader.classList.contains('mgh-language-loading')) {
+      loader.classList.add('out');
+      loader.style.display = 'none';
     }
     document.body.classList.remove('mgh-language-is-loading');
   }
@@ -235,4 +241,22 @@
   var initial = window.location.hash === '#en' ? 'en' : 'it';
   try { initial = localStorage.getItem(STORAGE_KEY) || initial; } catch (e) {}
   changeLanguage(initial === 'en' ? 'en' : 'it', false);
+
+  function hideBootLoader() {
+    if (document.body.classList.contains('mgh-language-is-loading')) return;
+    hideLoader();
+    bootLoaderTimeouts.forEach(function (timeout) {
+      window.clearTimeout(timeout);
+    });
+    bootLoaderTimeouts = [];
+  }
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    window.setTimeout(hideBootLoader, 120);
+  } else {
+    document.addEventListener('DOMContentLoaded', hideBootLoader, { once: true });
+  }
+  window.addEventListener('load', hideBootLoader, { once: true });
+  bootLoaderTimeouts.push(window.setTimeout(hideBootLoader, 1200));
+  bootLoaderTimeouts.push(window.setTimeout(hideBootLoader, 3000));
 }());
